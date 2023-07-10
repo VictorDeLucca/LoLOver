@@ -1,0 +1,177 @@
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Team Statistics</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f1f8ff;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #336699;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        margin-bottom: 12px;
+      }
+
+      .result {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+
+      .result span {
+        color: #336699;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Team Statistics</h1>
+      <div>
+        <label for="league">Select League:</label>
+        <select id="league">
+          <option value="">-- Select League --</option>
+          <option value="CBLOL.csv">CBLOL</option>
+          <option value="CBLOLA.csv">CBLOLA</option>
+          <option value="EBL.csv">EBL</option>
+          <option value="Hitpoint.csv">Hitpoint</option>
+          <option value="LCK.csv">LCK</option>
+          <option value="LCKCL.csv">LCKCL</option>
+          <option value="LCS.csv">LCS</option>
+          <option value="LEC.csv">LEC</option>
+          <option value="LFL.csv">LFL</option>
+          <option value="LJL.csv">LJL</option>
+          <option value="LLA.csv">LLA</option>
+          <option value="LPL.csv">LPL</option>
+          <option value="LPLOL.csv">LPLOL</option>
+          <option value="LVP.csv">LVP</option>
+          <option value="NLC.csv">NLC</option>
+          <option value="PGN.csv">PGN</option>
+          <option value="PRM.csv">PRM</option>
+          <option value="TCL.csv">TCL</option>
+          <option value="UltraLiga.csv">UltraLiga</option>
+          <option value=".csv"></option>
+          <!-- Add more options for each league and corresponding CSV file -->
+        </select>
+      </div>
+      <div>
+        <label for="team1">Select Team 1:</label>
+        <select id="team1">
+          <option value="">-- Select Team --</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      <div>
+        <label for="team2">Select Team 2:</label>
+        <select id="team2">
+          <option value="">-- Select Team --</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+      <div class="result">
+        <p>Average Game Time: <span id="avgGameTime"></span></p>
+        <p>Average Kills: <span id="avgKills"></span></p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.1.1"></script>
+    <script>
+      const leagueSelect = document.getElementById('league');
+      const team1Select = document.getElementById('team1');
+      const team2Select = document.getElementById('team2');
+      const avgGameTimeElement = document.getElementById('avgGameTime');
+      const avgKillsElement = document.getElementById('avgKills');
+      let teamData = [];
+
+      // Event listener for league selection
+      leagueSelect.addEventListener('change', loadTeamData);
+
+      // Function to load team data based on selected league
+      function loadTeamData() {
+        const selectedLeague = leagueSelect.value;
+
+        if (selectedLeague) {
+          const csvFilePath = 'ligas/' + selectedLeague;
+
+          Papa.parse(csvFilePath, {
+            download: true,
+            header: true,
+            complete: function(results) {
+              teamData = results.data;
+
+              // Clear team options
+              team1Select.innerHTML = '<option value="">-- Select Team --</option>';
+              team2Select.innerHTML = '<option value="">-- Select Team --</option>';
+
+              // Populate team options in the select elements
+              teamData.forEach(team => {
+                const option1 = document.createElement('option');
+                option1.text = team.Team;
+                option1.value = team.AGT;
+                team1Select.add(option1);
+
+                const option2 = document.createElement('option');
+                option2.text = team.Team;
+                option2.value = team.AGT;
+                team2Select.add(option2);
+              });
+            }
+          });
+        } else {
+          teamData = [];
+          team1Select.innerHTML = '<option value="">-- Select Team --</option>';
+          team2Select.innerHTML = '<option value="">-- Select Team --</option>';
+          avgGameTimeElement.textContent = '';
+          avgKillsElement.textContent = '';
+        }
+      }
+
+      // Event listener for team selection
+      team1Select.addEventListener('change', updateResult);
+      team2Select.addEventListener('change', updateResult);
+
+      // Function to calculate and update the result
+      function updateResult() {
+        const selectedTeam1 = parseFloat(team1Select.value);
+        const selectedTeam2 = parseFloat(team2Select.value);
+
+        if (selectedTeam1 && selectedTeam2) {
+          const team1 = teamData.find(team => parseFloat(team.AGT) === selectedTeam1);
+          const team2 = teamData.find(team => parseFloat(team.AGT) === selectedTeam2);
+
+          const avgGameTime = (parseFloat(team1.AGT) + parseFloat(team2.AGT)) / 2;
+          const avgKills = (parseFloat(team1.CKPM) * parseFloat(team1.AGT) + parseFloat(team2.CKPM) * parseFloat(team2.AGT)) /2;
+
+          avgGameTimeElement.textContent = avgGameTime.toFixed(1);
+          avgKillsElement.textContent = avgKills.toFixed(2);
+        } else {
+          avgGameTimeElement.textContent = '';
+          avgKillsElement.textContent = '';
+        }
+      }
+    </script>
+  </body>
+  </html>
